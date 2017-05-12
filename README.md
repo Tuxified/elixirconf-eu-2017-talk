@@ -2,4 +2,4 @@
 
 Slides: [https://tuxified.github.io/elixirconf-eu-2017-talk](https://tuxified.github.io/elixirconf-eu-2017-talk)
 
-Other talks, links, blogs etc: https://tuxified.github.io/elixirconf-eu-2017
+Other talks, links, blogs etc: https://github.com/tuxified/elixirconf-eu-2017
