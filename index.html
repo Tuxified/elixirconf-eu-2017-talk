@@ -1,0 +1,456 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Exploring CQRS and Event Sourcing: A Journey into High Scalability, Availability and Maintainability</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/elm.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/solarized-light.css">
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+		<style type="text/css">
+			.top-corner {
+				position: fixed;
+				top: 0;
+				left: 0;
+				display: block;
+				width: 400px;
+				height: 400px;
+			}
+			.bottom-corner {
+				margin: 25px;
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				display: block;
+				width: 300px;
+				height: 50px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="top-corner">
+			<svg version="1.1" x="0px" y="0px" viewBox="0 0 323.1 323">
+				<!-- Copied from Luke Westby hello@lukewestby.com -->
+				<rect x="65.6" y="66.5" transform="matrix(2.256997e-03 -1 1 2.256997e-03 -1.082 158.3655)" width="26.5" height="26.4" style="fill: rgba(0, 0, 0, 0.1);"></rect>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="62.2,62.4 0,0 0,124.5 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="3.2,126.2 20.2,159.6 20.2,109.2 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="161,0 131,30 299.7,0 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="20.2,169.2 0,129.3 0,293 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="53.3,96.4 32.9,96.4 23.6,105.8 23.6,130.7 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="126,30 156,0 69.4,0 39.4,30 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="34.6,30 64.6,0 4.6,0 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="122.6,33.4 38,33.4 64.6,60 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="92.1,63.6 92,51.5 64.8,63.6 "></polygon>
+				<polygon style="fill: rgba(0, 0, 0, 0.1);" points="62.2,93 62.2,67.3 36.3,93 "></polygon>
+			</svg>
+		</div>
+		<div class="bottom-corner">
+			<img src="images/ElixirConfEU-forwhitebackgrounds.png" width="250">
+			@Tuxified - Tonći Galić
+		</div>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown  data-separator="---\r?\n"  data-separator-vertical="\+\+\+\r?\n" data-separator-notes="^note:" data-charset="utf-8">
+					<script type="text/template">
+
+## Buen día
+
+## Bon dia
+
+---
+
+## A small request/suggestion
+
+make pics using **_#elixirfriends_**
+
+collect info/link at https://github.com/Tuxified/elixirconf-eu-2017
+
+---
+
+## Exploring CQRS and Event Sourcing: A Journey into High Scalability, Availability and Maintainability
+
+note:
+
+Since starting with Erlang/Elixir (late 2013) became interested in FP. Learning more about it,
+tried to find ways of applying FP to OO, bascially "stealing" ideas.
+
+Speaking of stealing: title of my talk?..
+
++++
+
+### ... with Elixir<!-- .element: class="fragment" data-fragment-index="2" -->
+![image_of_cqrs_book](images/exploring_cqrs_book.jpg)<!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+## Event Sourcing (& CQRS)
+
+patterns coined by Greg Young (who enjoys Erlang)
+
+![ddd book](images/ddd_book.jpg)
+
++++
+
+### Event Sourcing?
+
+###### [Greg about ES in FP](https://www.youtube.com/watch?v=LDW0QWie21s&feature=youtu.be&t=1071)
+
+note:
+pattern in which, as opposed to crud, don't store latest state but the events/facts that occured in a system. current state is computed by going over all of these events
+
++++
+
+`"just left fold over the events"`
+
+```elixir
+state = Enum.reduce([events], fn({state, event}) -> state + event end)
+
+```
+<!-- .element: class="fragment" data-fragment-index="1" -->
+
+Similar to GenServer <!-- .element: class="fragment" data-fragment-index="2" -->
+
+```elixir
+
+def handle_cast(event, state) do
+	{:noreply, state + event}
+end
+```
+<!-- .element: class="fragment" data-fragment-index="3" -->
+
+![es example](images/event_sourcing_example.png) <!-- .element: class="fragment" data-fragment-index="4" -->
+
+
+note:
+Greg Young tried writing a ES framework,
+turned out to be a left fold over the events
+
++++
+
+## Examples:
+
+- git
+- accounting/bank account
+- chatbots
+- Elm! 💙 .. Flux
+- Others?<!-- .element: class="fragment" data-fragment-index="1" -->
+
+note:
+
+Database (RDBMS) transactional log.. can you think of examples?
+
+---
+
+Imagine a bank account balance being a field in a RDBMS
+
+![computer says no](images/computer_says_no.gif)
+
+---
+
+## Difference with Git
+
+Events are immutable, only revert commits are possible
+
+note:
+	guilty pleasure question: who was happy git allows to change history and force-push?
+
+---
+
+## Layout of Events (store)
+
+ | Name | Version | Data | AggregateID |
+ |------|--------:|------|-------------|
+ | AccountCreated | 1 | %{name: "Tonći", balance: 0} | "699d82c0-3ee5" |
+ | MoneyDeposited | 2 | %{amount: 100} | "699d82c0-3ee5" |
+ | MoneyDeposited | 3 | %{amount: 500} | "699d82c0-3ee5" |
+ | MoneyWithdrawn | 4 | %{amount: 100} | "699d82c0-3ee5" |
+
+
+Balance?
+
+note:
+
+Events are:
+ - immutable
+ - happened in the past
+ - single source of truth
+ -
+ - atomic (= smallest info/event that happens in your system)
+ - reflect use case
+
++++
+
+## Aggregate
+
+![aggregate](images/aggregate.png)
+
+== Context in Phx 1.3? <!-- .element: class="fragment" data-fragment-index="1" -->
+
+note:
+
+aggregate is just a proces/genserver in Elixir
+
+---
+
+## Benefits of ES
+
+Perfect log!
+
+![perfect log](images/perfect_log.gif) <!-- .element: class="fragment" data-fragment-index="1" -->
+
+note:
+
+  - reproducability
+  - auditing
+  - statistics/answer questions later
+  - using events brings up temporality in systems
+
+---
+
+## Troubles with ES
+
+- Make sure events are processed once (unique aggregates)
+	- one aggregate/proces in cluster <!-- .element: class="fragment" data-fragment-index="1" -->
+- Changing code
+	- versioning/snapshots <!-- .element: class="fragment" data-fragment-index="2" -->
+- Storing all events
+	- sharding, eventstore per aggregates, snapshots <!-- .element: class="fragment" data-fragment-index="3" -->
+
+- Reading current state -> replay all events first?
+
+---
+
+## CQRS?
+
+- **C** ommand
+- **Q** uery
+- **R** esponsibility
+- **S** egregation
+
+An architectural pattern that separates _Commands_ (that change state=changes) from _Queries_ (that only read state=state)
+
+note:
+CQS is only a code pattern, hence a different name (to emphasize difference)
+Exists to help ES, to have multiple read representations
+
++++
+
+commands:
+- commands produce events, throw errors or nothing happens
+- queries return data, side effect freee
+- separate storage, optimized for each side
+- read side available if write side gets overloaded (which is also a trend in frontend: PWA)
+- important for event to be handled once (here's where actors come in)
+
+
++++
+
+![cqrs](images/cqrs_pattern.png)
+
+from the CQRS book
+---
+
+# Benefits of CQRS
+
+note:
+
+optimize storage for write/read side
+optimize CAP separately
+have separate teams
+
+---
+
+## Other patterns/concepts which mix nicely
+
+- bounded contexts
+- task based UI (Elm Architecture)
+- sagas (long running process handlers = no problem)
+
+---
+
+## Bounded contexts
+### conways law
+
+![bounded context](images/bounded_context.png)
+
+note:
+Any organization that designs a system will produce a design whose structure is a copy of the organization's communication structure.
+
+---
+
+# Task based UI
+
++++
+
+![crud_ui](images/crud_ui.png)
+
++++
+
+![taks_ui](images/task_ui.png)
+
++++
+
+```elixir
+defmodule Form do
+	def handle(params) do
+		cond do
+			params["completed"] -> archive()
+			params["assign_to"] -> notify_assignee()
+			params["description"] -> send_change_to_assignee()
+
+			params["assign_to"] && params["completed"] -> ?
+			params["description"] && params["completed"] -> ?
+		end
+	end
+end
+
+```
+
++++
+
+```elixir
+defmodule Form do
+	def handle(%Command.Assign{assignee: assignee, todo_id: id}}) do
+		notify_assignee()
+	end
+	def handle(%Command.Complete{todo_id: id}}) do
+		archive()
+	end
+	def handle(%Command.ChangeDetails{title: title, description: desc}}) do
+		send_change_to_assignee()
+	end
+end
+
+```
+---
+
+## Things in Elixir that help use ES
+
+- FP & ES: immutability, functional composition, GenServer
+- Commands, Events: messages, pattern matching
+- Aggregate: actors/processes
+- Command & Event handlers: gen_event, GenStage
+
+CQRS promotes distribution, concurrency and eventual consistency
+
+which happens to be things Elixir eco system excels at
+
+note:
+gen_event, GenStage: asymmetric messaging, no central bus
+
+---
+
+## Exploring CQRS and Event Sourcing: A Journey into High *Scalability*, *Availability* and *Maintainability*
+
+note:
+scalability - messaging, splitting read vs writes, distributed
+availability - splitting up means write can be consistent, reads optimized for availability, eventual consistency
+maintainability - splitting into smaller parts, better testability/debugging, different teams, task based UI, add features/parts later on
+
+---
+
+# TL;DPA
+
++++
+
+## use cases for cqrs/es (pros)
+
+  - historic data (accounting, forgery checking) - answers questions not yet asked
+  - scalability (different read/write strategies, multiple read implementations)
+  - logs/audit trail
+  - medical, legal, insurance, accounting
+  - transactional domains (finance, gambling)
+  - writing regression tests is easy
+  - works well with machine learning
+  - compare time periods
+  - CQRS/ES is not a top-level architecture
+
++++
+
+## drawbacks (cons)
+
+  - not on pro-list
+  - bad decisions stick (unlike git, no history changes)
+  - need to be able to handle event duplicates
+  - keep up with eventual consistency
+  - storing all the data
+
++++
+
+## Thanks to:
+
+- Derek Kraan
+- Stefan van Raaphorst
+- Gerben de Graaf
+- Martin Fowler
+- Bryan Hunter
+- Vladik Khononov
+- Sebastian Daschner
+- Ben Smith
+
+---
+
+## Examples
+
+https://github.com/Tuxified/elixirconf-eu-2017-talk/blob/master/examples
+
+---
+
+Thank for listening
+
+###### Tonći Galić
+
+###### @Tuxified
+
+###### tonci@kabisa.nl
+
+###### ElixirConf EU 2017
+
+![let's make friends](images/beach.gif) <!-- .element: class="fragment" data-fragment-index="1" -->
+
+---
+
+## More info
+
+- [Greg Young - CQRS and Event Sourcing - Code on the Beach 2014](https://www.youtube.com/watch?v=JHGkaShoyNs)
+- [Greg Young - Event Sourcing is actually just functional code](https://www.youtube.com/watch?v=kZL41SMXWdM&t=3s)
+- [Event Sourcing - Martin Fowler](https://martinfowler.com/eaaDev/EventSourcing.html)
+- [Towards an immutable domain model](https://tech.zilverline.com/2011/02/01/towards-an-immutable-domain-model-introduction-part-1)
+- [Bryan Hunter - CQRS with Erlang](https://vimeo.com/97318824)
+- [Derek Kraan - Event Sourcing in Elixir](https://tech.zilverline.com/2017/04/07/elixir_event_sourcing)
+					</script>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
